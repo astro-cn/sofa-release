@@ -6,14 +6,16 @@ on:
     tags:
       - 'v*'
 
-env:
-  SOFA_URL: ${{ vars.SOFA_URL }}
-  SOFA_VERSION: ${{ vars.SOFA_VERSION }}
 
 permissions:
   contents: write
 
+env:
+  SOFA_URL: http://www.iausofa.org/2023_1011_C/sofa_c-20231011.tar.gz
+  SOFA_VERSION: 20231011
+
 jobs:
+
   build:
     runs-on: ${{ matrix.os }}
     defaults:
