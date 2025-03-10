@@ -137,7 +137,7 @@ jobs:
     - name: Create release
       uses: softprops/action-gh-release@v2
       with:
-        bodyFile: CHANGELOG/CHANGELOG-latest.md
+        body_path: CHANGELOG/CHANGELOG-latest.md
         files: |
           build/*.a
           build/*.lib
