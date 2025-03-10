@@ -11,8 +11,8 @@ permissions:
   contents: write
 
 env:
-  SOFA_URL: http://www.iausofa.org/2023_1011_C/sofa_c-20231011.tar.gz
-  SOFA_VERSION: 20231011
+  SOFA_URL: ${{ secrets.SOFA_URL }}
+  SOFA_VERSION: ${{ secrets.SOFA_VERSION }}
 
 jobs:
 
