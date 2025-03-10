@@ -1,0 +1,140 @@
+name: Build and Release SOFA C Library
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+env:
+  SOFA_URL: ${{ vars.SOFA_URL }}
+  SOFA_VERSION: ${{ vars.SOFA_VERSION }}
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: ${{ matrix.SHELL }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        arch: [x64]
+        include:
+          - os: windows-latest
+            arch: x64
+            static_lib_name: sofa.lib
+            SHELL: powershell
+          - os: ubuntu-latest
+            arch: x64
+            static_lib_name: libsofa.a
+            SHELL: bash
+          - os: macos-latest
+            arch: x64
+            static_lib_name: libsofa.a
+            SHELL: bash
+    env:
+        ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+    steps:
+      - name: Get the version
+        id: get_version
+        shell: bash
+        run: echo ::set-output name=VERSION::$(echo $GITHUB_REF | cut -d / -f 3)
+
+      - name: Get Library Name
+        id: get_name
+        shell: bash
+        run: echo ::set-output name=NAME::Sofa
+
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Download SOFA source (Linux & Darwin)
+        if: matrix.os != 'windows-latest'
+        run: curl -L ${{ env.SOFA_URL }} -o sofa.tar.gz
+
+      - name: Setup MSVC
+        uses: TheMrMilchmann/setup-msvc-dev@v3
+        if: matrix.os == 'windows-latest'
+        with:
+          arch: ${{ matrix.arch }}
+
+      - name: Download SOFA source (Windows)
+        if: matrix.os == 'windows-latest'
+        run: wget ${{ env.SOFA_URL }} -outfile sofa.tar.gz
+
+      - name: Extract SOFA source
+        run: tar -xzf sofa.tar.gz
+
+      - name: Build static library
+        run: |
+          cd sofa/${{ env.SOFA_VERSION }}/c/src
+          rm t_sofa_c.c
+          rm makefile
+          mv ../../../../Makefile Makefile
+          make
+        shell: bash
+
+      - name: Package libraries for release (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          New-Item -ItemType Directory -Force -Path "dist"
+          cp sofa/${{ env.SOFA_VERSION }}/c/src/${{ matrix.static_lib_name }} dist/${{ steps.get_name.outputs.NAME }}.${{ steps.get_version.outputs.VERSION }}.Windows-${{ matrix.arch }}.lib
+        shell: pwsh
+
+      - name: Package libraries for release (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          mkdir -p dist
+          cp sofa/${{ env.SOFA_VERSION }}/c/src/${{ matrix.static_lib_name }} dist/${{ steps.get_name.outputs.NAME }}.${{ steps.get_version.outputs.VERSION }}.Linux-${{ matrix.arch }}.a
+
+      - name: Package libraries for release (MacOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          mkdir -p dist
+          cp sofa/${{ env.SOFA_VERSION }}/c/src/${{ matrix.static_lib_name }} dist/${{ steps.get_name.outputs.NAME }}.${{ steps.get_version.outputs.VERSION }}.Darwin-${{ matrix.arch }}.a
+
+      - name: Windows - Uploading artifact
+        if: matrix.os == 'windows-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.get_name.outputs.NAME }}-${{ github.sha }}.windows-${{ matrix.arch }}.lib
+          path: dist/${{ steps.get_name.outputs.NAME }}.${{ steps.get_version.outputs.VERSION }}.Windows-${{ matrix.arch }}.lib
+
+      - name: Linux - Uploading artifact
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.get_name.outputs.NAME }}-${{ github.sha }}.linux-${{ matrix.arch }}.a
+          path: dist/${{ steps.get_name.outputs.NAME }}.${{ steps.get_version.outputs.VERSION }}.Linux-${{ matrix.arch }}.a
+
+      - name: Macos - Uploading artifact
+        if: matrix.os == 'macos-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.get_name.outputs.NAME }}-${{ github.sha }}.macos-${{ matrix.arch }}.a
+          path: dist/${{ steps.get_name.outputs.NAME }}.${{ steps.get_version.outputs.VERSION }}.Darwin-${{ matrix.arch }}.a
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Download build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: build
+        merge-multiple: true
+
+    - name: Create release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: |
+          *.a
+          *.lib
