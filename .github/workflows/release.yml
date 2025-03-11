@@ -11,7 +11,7 @@ permissions:
 
 env:
   SOFA_URL: "http://www.iausofa.org/2012_0301_C/sofa_c-20120301_a.tar.gz"
-  SOFA_VERSION: "20120301"
+  SOFA_VERSION: "20120301_a"
 
 jobs:
 
