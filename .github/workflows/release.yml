@@ -10,8 +10,8 @@ permissions:
   contents: write
 
 env:
-  SOFA_URL: ${{ secrets.SOFA_URL }}
-  SOFA_VERSION: ${{ secrets.SOFA_VERSION }}
+  SOFA_URL: "http://www.iausofa.org/2009_0201_C/sofa_c-20090201_c.tar.gz"
+  SOFA_VERSION: "20090201"
 
 jobs:
 
