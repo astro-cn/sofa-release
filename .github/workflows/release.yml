@@ -82,20 +82,20 @@ jobs:
       - name: Package libraries for release (Windows)
         if: matrix.os == 'windows-latest'
         run: |
-          New-Item -ItemType Directory -Force -Path "dist"
+          New-Item -ItemType Directory -Force -Path "build"
           cp sofa/${{ env.SOFA_VERSION }}/c/src/${{ matrix.static_lib_name }} build/${{ steps.get_name.outputs.NAME }}.${{ steps.get_version.outputs.VERSION }}.Windows-${{ matrix.arch }}.lib
         shell: pwsh
 
       - name: Package libraries for release (Linux)
         if: matrix.os == 'ubuntu-latest'
         run: |
-          mkdir -p dist
+          mkdir -p build
           cp sofa/${{ env.SOFA_VERSION }}/c/src/${{ matrix.static_lib_name }} build/${{ steps.get_name.outputs.NAME }}.${{ steps.get_version.outputs.VERSION }}.Linux-${{ matrix.arch }}.a
 
       - name: Package libraries for release (MacOS)
         if: matrix.os == 'macos-latest'
         run: |
-          mkdir -p dist
+          mkdir -p build
           cp sofa/${{ env.SOFA_VERSION }}/c/src/${{ matrix.static_lib_name }} build/${{ steps.get_name.outputs.NAME }}.${{ steps.get_version.outputs.VERSION }}.Darwin-${{ matrix.arch }}.a
 
       - name: Copy sofa header file
