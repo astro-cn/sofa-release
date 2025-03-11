@@ -6,7 +6,6 @@ on:
     tags:
       - 'v*'
 
-
 permissions:
   contents: write
 
@@ -84,41 +83,50 @@ jobs:
         if: matrix.os == 'windows-latest'
         run: |
           New-Item -ItemType Directory -Force -Path "dist"
-          cp sofa/${{ env.SOFA_VERSION }}/c/src/${{ matrix.static_lib_name }} dist/${{ steps.get_name.outputs.NAME }}.${{ steps.get_version.outputs.VERSION }}.Windows-${{ matrix.arch }}.lib
+          cp sofa/${{ env.SOFA_VERSION }}/c/src/${{ matrix.static_lib_name }} build/${{ steps.get_name.outputs.NAME }}.${{ steps.get_version.outputs.VERSION }}.Windows-${{ matrix.arch }}.lib
         shell: pwsh
 
       - name: Package libraries for release (Linux)
         if: matrix.os == 'ubuntu-latest'
         run: |
           mkdir -p dist
-          cp sofa/${{ env.SOFA_VERSION }}/c/src/${{ matrix.static_lib_name }} dist/${{ steps.get_name.outputs.NAME }}.${{ steps.get_version.outputs.VERSION }}.Linux-${{ matrix.arch }}.a
+          cp sofa/${{ env.SOFA_VERSION }}/c/src/${{ matrix.static_lib_name }} build/${{ steps.get_name.outputs.NAME }}.${{ steps.get_version.outputs.VERSION }}.Linux-${{ matrix.arch }}.a
 
       - name: Package libraries for release (MacOS)
         if: matrix.os == 'macos-latest'
         run: |
           mkdir -p dist
-          cp sofa/${{ env.SOFA_VERSION }}/c/src/${{ matrix.static_lib_name }} dist/${{ steps.get_name.outputs.NAME }}.${{ steps.get_version.outputs.VERSION }}.Darwin-${{ matrix.arch }}.a
+          cp sofa/${{ env.SOFA_VERSION }}/c/src/${{ matrix.static_lib_name }} build/${{ steps.get_name.outputs.NAME }}.${{ steps.get_version.outputs.VERSION }}.Darwin-${{ matrix.arch }}.a
+
+      - name: Copy sofa header file
+        run: cp sofa/${{ env.SOFA_VERSION }}/c/src/sofa.h build/sofa.h
 
       - name: Windows - Uploading artifact
         if: matrix.os == 'windows-latest'
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.get_name.outputs.NAME }}-${{ github.sha }}.windows-${{ matrix.arch }}.lib
-          path: dist/${{ steps.get_name.outputs.NAME }}.${{ steps.get_version.outputs.VERSION }}.Windows-${{ matrix.arch }}.lib
+          path: |
+            build/sofa.h
+            build/${{ steps.get_name.outputs.NAME }}.${{ steps.get_version.outputs.VERSION }}.Windows-${{ matrix.arch }}.lib
 
       - name: Linux - Uploading artifact
         if: matrix.os == 'ubuntu-latest'
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.get_name.outputs.NAME }}-${{ github.sha }}.linux-${{ matrix.arch }}.a
-          path: dist/${{ steps.get_name.outputs.NAME }}.${{ steps.get_version.outputs.VERSION }}.Linux-${{ matrix.arch }}.a
+          path: |
+            build/sofa.h
+            build/${{ steps.get_name.outputs.NAME }}.${{ steps.get_version.outputs.VERSION }}.Linux-${{ matrix.arch }}.a
 
       - name: Macos - Uploading artifact
         if: matrix.os == 'macos-latest'
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.get_name.outputs.NAME }}-${{ github.sha }}.macos-${{ matrix.arch }}.a
-          path: dist/${{ steps.get_name.outputs.NAME }}.${{ steps.get_version.outputs.VERSION }}.Darwin-${{ matrix.arch }}.a
+          path: |
+            build/sofa.h
+            build/${{ steps.get_name.outputs.NAME }}.${{ steps.get_version.outputs.VERSION }}.Darwin-${{ matrix.arch }}.a
 
   release:
     needs: build
@@ -134,10 +142,17 @@ jobs:
         path: build
         merge-multiple: true
 
+    - name: Create sha1sum for build/sofa.h file, use sha1sum value as file preffix
+      run: |
+        cd build
+        mv sofa.h $(sha1sum sofa.h | awk '{print $1}').sofa.h
+      shell: bash
+
     - name: Create release
       uses: softprops/action-gh-release@v2
       with:
-        body_path: CHANGELOG/CHANGELOG-latest.md
+        body_path: CHANGELOG/CHANGELOG-${{ env.SOFA_VERSION }}.md
         files: |
+          build/sofa.h
           build/*.a
           build/*.lib
