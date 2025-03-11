@@ -153,6 +153,6 @@ jobs:
       with:
         body_path: CHANGELOG/CHANGELOG-${{ env.SOFA_VERSION }}.md
         files: |
-          build/sofa.h
+          build/*.h
           build/*.a
           build/*.lib
