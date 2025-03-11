@@ -10,8 +10,8 @@ permissions:
   contents: write
 
 env:
-  SOFA_URL: "http://www.iausofa.org/2016_0503_C/sofa_c-20160503_c.tar.gz"
-  SOFA_VERSION: "20160503_c"
+  SOFA_URL: "http://www.iausofa.org/2017_0420_C/sofa_c-20170420.tar.gz"
+  SOFA_VERSION: "20170420"
 
 jobs:
 
