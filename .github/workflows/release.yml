@@ -68,7 +68,9 @@ jobs:
         run: wget ${{ env.SOFA_URL }} -outfile sofa.tar.gz
 
       - name: Extract SOFA source
-        run: tar -xzf sofa.tar.gz
+        run: |
+          cp sofa.tar.gz sofa.${{ env.SOFA_VERSION }}.tar.gz
+          tar -xzf sofa.tar.gz
 
       - name: Build static library
         run: |
@@ -107,6 +109,7 @@ jobs:
         with:
           name: ${{ steps.get_name.outputs.NAME }}-${{ github.sha }}.windows-${{ matrix.arch }}.lib
           path: |
+            sofa.${{ env.SOFA_VERSION }}.tar.gz
             build/sofa.h
             build/${{ steps.get_name.outputs.NAME }}.${{ steps.get_version.outputs.VERSION }}.Windows-${{ matrix.arch }}.lib
 
@@ -116,6 +119,7 @@ jobs:
         with:
           name: ${{ steps.get_name.outputs.NAME }}-${{ github.sha }}.linux-${{ matrix.arch }}.a
           path: |
+            sofa.${{ env.SOFA_VERSION }}.tar.gz
             build/sofa.h
             build/${{ steps.get_name.outputs.NAME }}.${{ steps.get_version.outputs.VERSION }}.Linux-${{ matrix.arch }}.a
 
@@ -125,6 +129,7 @@ jobs:
         with:
           name: ${{ steps.get_name.outputs.NAME }}-${{ github.sha }}.macos-${{ matrix.arch }}.a
           path: |
+            sofa.${{ env.SOFA_VERSION }}.tar.gz
             build/sofa.h
             build/${{ steps.get_name.outputs.NAME }}.${{ steps.get_version.outputs.VERSION }}.Darwin-${{ matrix.arch }}.a
 
