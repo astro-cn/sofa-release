@@ -101,7 +101,9 @@ jobs:
           cp sofa/${{ env.SOFA_VERSION }}/c/src/${{ matrix.static_lib_name }} build/${{ steps.get_name.outputs.NAME }}.${{ steps.get_version.outputs.VERSION }}.Darwin-${{ matrix.arch }}.a
 
       - name: Copy sofa header file
-        run: cp sofa/${{ env.SOFA_VERSION }}/c/src/sofa.h build/sofa.h
+        run: |
+          mv sofa.${{ env.SOFA_VERSION }}.tar.gz build/sofa.${{ env.SOFA_VERSION }}.tar.gz
+          cp sofa/${{ env.SOFA_VERSION }}/c/src/sofa.h build/sofa.h
 
       - name: Windows - Uploading artifact
         if: matrix.os == 'windows-latest'
@@ -109,7 +111,7 @@ jobs:
         with:
           name: ${{ steps.get_name.outputs.NAME }}-${{ github.sha }}.windows-${{ matrix.arch }}.lib
           path: |
-            sofa.${{ env.SOFA_VERSION }}.tar.gz
+            build/sofa.${{ env.SOFA_VERSION }}.tar.gz
             build/sofa.h
             build/${{ steps.get_name.outputs.NAME }}.${{ steps.get_version.outputs.VERSION }}.Windows-${{ matrix.arch }}.lib
 
@@ -119,7 +121,7 @@ jobs:
         with:
           name: ${{ steps.get_name.outputs.NAME }}-${{ github.sha }}.linux-${{ matrix.arch }}.a
           path: |
-            sofa.${{ env.SOFA_VERSION }}.tar.gz
+            build/sofa.${{ env.SOFA_VERSION }}.tar.gz
             build/sofa.h
             build/${{ steps.get_name.outputs.NAME }}.${{ steps.get_version.outputs.VERSION }}.Linux-${{ matrix.arch }}.a
 
@@ -129,7 +131,7 @@ jobs:
         with:
           name: ${{ steps.get_name.outputs.NAME }}-${{ github.sha }}.macos-${{ matrix.arch }}.a
           path: |
-            sofa.${{ env.SOFA_VERSION }}.tar.gz
+            build/sofa.${{ env.SOFA_VERSION }}.tar.gz
             build/sofa.h
             build/${{ steps.get_name.outputs.NAME }}.${{ steps.get_version.outputs.VERSION }}.Darwin-${{ matrix.arch }}.a
 
@@ -150,6 +152,7 @@ jobs:
     - name: Create sha1sum for build/sofa.h file, use sha1sum value as file preffix
       run: |
         cd build
+        ls -l
         mv sofa.h $(sha1sum sofa.h | awk '{print $1}').sofa.h
       shell: bash
 
@@ -158,6 +161,7 @@ jobs:
       with:
         body_path: CHANGELOG/CHANGELOG-${{ env.SOFA_VERSION }}.md
         files: |
+          build/sofa.${{ env.SOFA_VERSION }}.tar.gz
           build/*.h
           build/*.a
           build/*.lib
